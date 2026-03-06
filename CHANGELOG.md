@@ -1,3 +1,7 @@
+## 0.1.0+1
+* Update package names to `app.mylekha.extend_screen` and `app.mylekha.extend_screen_example` for Android.
+
+
 ## 0.1.0
 
 * Initial release.

@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "extend_screen",
-      "version": "0.1.0",
+      "version": "0.1.0+1",
       "dependencies": [
         "desktop_multi_window",
         "flutter"
