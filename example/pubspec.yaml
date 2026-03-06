@@ -38,6 +38,9 @@ dependencies:
   extend_screen:
     path: ../
 
+  # Used by sub_window.dart to maximize the window when __autoMaximize is set
+  window_manager: ^0.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

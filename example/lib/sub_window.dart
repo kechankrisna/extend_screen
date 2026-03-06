@@ -29,7 +29,10 @@ class SubWindowApp extends StatelessWidget {
 }
 
 class SubWindowPage extends StatefulWidget {
-  const SubWindowPage({super.key, required this.windowNumber});
+  const SubWindowPage({
+    super.key,
+    required this.windowNumber,
+  });
 
   final int windowNumber;
 
