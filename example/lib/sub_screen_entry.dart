@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:dualscreen/dualscreen.dart';
+import 'package:extend_screen/extend_screen.dart';
 
 /// Dart entry point for the secondary-display Flutter engine on Android.
 ///
 /// The `@pragma('vm:entry-point')` annotation prevents tree-shaking from
-/// removing this function, which is invoked by [DualscreenPlugin.kt] via
+/// removing this function, which is invoked by [ExtendScreenPlugin.kt] via
 /// [DartExecutor.DartEntrypoint].
 ///
 /// This runs in a completely separate [FlutterEngine] from the main app —

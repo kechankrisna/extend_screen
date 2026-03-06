@@ -18,7 +18,7 @@ import 'unsupported_multi_window_manager.dart';
 /// | Android             | [AndroidSecondDisplayManager]    |
 /// | iOS / Web           | [UnsupportedMultiWindowManager]  |
 ///
-/// This is the stable public API surface of the `dualscreen` package.
+/// This is the stable public API surface of the `extend_screen` package.
 abstract class MultiWindowManager {
   // Singleton — resolved once and cached so the platform is never queried twice.
   static MultiWindowManager? _instance;

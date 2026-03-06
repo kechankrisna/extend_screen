@@ -1,10 +1,10 @@
 {
   "roots": [
-    "dualscreen"
+    "extend_screen"
   ],
   "packages": [
     {
-      "name": "dualscreen",
+      "name": "extend_screen",
       "version": "0.1.0",
       "dependencies": [
         "desktop_multi_window",

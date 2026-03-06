@@ -164,7 +164,7 @@
       "languageVersion": "3.5"
     },
     {
-      "name": "dualscreen",
+      "name": "extend_screen",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.9"

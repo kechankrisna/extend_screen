@@ -1,5 +1,5 @@
-name: dualscreen_example
-description: "Example app demonstrating the dualscreen package — multi-window on desktop and Android dual-display (POS)."
+name: extend_screen_example
+description: "Example app demonstrating the extend_screen package — multi-window on desktop and Android dual-display (POS)."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -35,7 +35,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # The package this example demonstrates
-  dualscreen:
+  extend_screen:
     path: ../
 
 dev_dependencies:

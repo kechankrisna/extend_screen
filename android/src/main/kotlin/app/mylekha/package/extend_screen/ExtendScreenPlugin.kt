@@ -1,4 +1,4 @@
-package app.mylekha.package.dualscreen
+package app.mylekha.package.extend_screen
 
 import android.app.Presentation
 import android.content.Context
@@ -14,14 +14,14 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * `dualscreen` Flutter plugin — Android entry point.
+ * `extend_screen` Flutter plugin — Android entry point.
  *
  * Registers with Flutter's plugin system via auto-registration
  * (GeneratedPluginRegistrant). No manual registration in MainActivity needed.
  *
  * Delegates all logic to [SecondDisplayManager].
  */
-class DualscreenPlugin : FlutterPlugin {
+class ExtendScreenPlugin : FlutterPlugin {
 
     private var manager: SecondDisplayManager? = null
 
@@ -63,7 +63,7 @@ private class SecondDisplayManager(
 
     companion object {
         private const val SUB_CHANNEL = "sub_screen_commands"
-        private const val ENGINE_ID = "dualscreen_sub_engine"
+        private const val ENGINE_ID = "extend_screen_sub_engine"
     }
 
     private val displayManager =

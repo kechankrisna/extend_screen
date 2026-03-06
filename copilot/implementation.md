@@ -1,4 +1,4 @@
-# `dualscreen` — Flutter Plugin Implementation
+# `extend_screen` — Flutter Plugin Implementation
 
 A Flutter plugin for **multi-window support on desktop** (Windows, macOS, Linux)
 and **dual-display / secondary-screen support on Android** (POS devices).
@@ -12,7 +12,7 @@ and **dual-display / secondary-screen support on Android** (POS devices).
 | Flutter SDK | `^3.10.4` |
 | Dart | `^3.10.4` (sealed classes, patterns) |
 | `desktop_multi_window` | `^0.2.0` |
-| Android plugin package | `app.mylekha.package.dualscreen` |
+| Android plugin package | `app.mylekha.package.extend_screen` |
 | Android Kotlin JVM target | 17 |
 | Plugin registration | `FlutterPlugin` interface (auto via `GeneratedPluginRegistrant`) |
 
@@ -21,9 +21,9 @@ and **dual-display / secondary-screen support on Android** (POS devices).
 ## Package Structure
 
 ```
-dualscreen/
+extend_screen/
 ├── lib/
-│   ├── dualscreen.dart                         ← barrel export (public API)
+│   ├── extend_screen.dart                         ← barrel export (public API)
 │   └── src/
 │       ├── sub_display_state.dart              ← sealed state + JSON codec
 │       ├── sub_window_size.dart                ← sealed window-size spec
@@ -32,8 +32,8 @@ dualscreen/
 │       ├── android_second_display_manager.dart ← Android MethodChannel impl
 │       └── unsupported_multi_window_manager.dart ← iOS / Web no-op fallback
 ├── android/
-│   └── src/main/kotlin/app/mylekha/package/dualscreen/
-│       └── DualscreenPlugin.kt                 ← FlutterPlugin + Presentation API
+│   └── src/main/kotlin/app/mylekha/package/extend_screen/
+│       └── ExtendScreenPlugin.kt                 ← FlutterPlugin + Presentation API
 ├── example/                                    ← runnable demo app
 │   ├── lib/
 │   │   ├── main.dart                           ← entry-point router
@@ -43,14 +43,14 @@ dualscreen/
 │   ├── android/app/src/main/
 │   │   ├── AndroidManifest.xml                 ← resizeableActivity="true"
 │   │   └── kotlin/.../MainActivity.kt          ← bare FlutterActivity()
-│   └── pubspec.yaml                            ← dualscreen: path: ../
+│   └── pubspec.yaml                            ← extend_screen: path: ../
 ├── pubspec.yaml
 └── implementation.md                           ← this file
 ```
 
 ---
 
-## Public API (`lib/dualscreen.dart`)
+## Public API (`lib/extend_screen.dart`)
 
 Three types are exported:
 
@@ -231,7 +231,7 @@ every hot restart in development.
 ### `lib/src/android_second_display_manager.dart`
 
 Android implementation via `MethodChannel("second_display")`. Delegates all
-Presentation API work to `DualscreenPlugin.kt`.
+Presentation API work to `ExtendScreenPlugin.kt`.
 
 ```dart
 class AndroidSecondDisplayManager extends MultiWindowManager {
@@ -269,7 +269,7 @@ All other methods are silent no-ops — callers never need platform guards.
 
 ---
 
-## Android Plugin (`DualscreenPlugin.kt`)
+## Android Plugin (`ExtendScreenPlugin.kt`)
 
 Uses the `FlutterPlugin` interface — auto-registered by `GeneratedPluginRegistrant`,
 **no changes to `MainActivity` needed in the host app**.
@@ -281,7 +281,7 @@ Host app MainActivity (bare FlutterActivity)
     │
     └── GeneratedPluginRegistrant.registerWith()
             │
-            └── DualscreenPlugin.onAttachedToEngine()
+            └── ExtendScreenPlugin.onAttachedToEngine()
                     │
                     └── SecondDisplayManager
                             ├── MethodChannel("second_display")  ← Flutter → Kotlin
@@ -295,7 +295,7 @@ Host app MainActivity (bare FlutterActivity)
 
 **Auto-registration:**
 ```kotlin
-class DualscreenPlugin : FlutterPlugin {
+class ExtendScreenPlugin : FlutterPlugin {
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         manager = SecondDisplayManager(binding.applicationContext)
         manager!!.register(MethodChannel(binding.binaryMessenger, "second_display"))
@@ -324,7 +324,7 @@ private fun initSecondDisplay(display: Display) {
                 "subScreenMain"   // @pragma('vm:entry-point') in the host app
             )
         )
-        FlutterEngineCache.getInstance().put("dualscreen_sub_engine", engine)
+        FlutterEngineCache.getInstance().put("extend_screen_sub_engine", engine)
         subChannel = MethodChannel(engine.dartExecutor.binaryMessenger, "sub_screen_commands")
     }
     presentation = SecondDisplayPresentation(context, display, subEngine!!).also { it.show() }
@@ -337,7 +337,7 @@ private fun releaseEngine() {
     presentation?.detach()   // detaches FlutterView from engine before dismiss
     presentation?.dismiss()
     presentation = null
-    FlutterEngineCache.getInstance().remove("dualscreen_sub_engine")
+    FlutterEngineCache.getInstance().remove("extend_screen_sub_engine")
     subEngine?.destroy()
     subEngine = null
     subChannel = null
@@ -359,7 +359,7 @@ private fun releaseEngine() {
 ### Android sub-screen Dart entry point
 
 The host app must have a `@pragma('vm:entry-point')` annotated function. Without
-the pragma, tree-shaking removes it and `DualscreenPlugin.kt` cannot start it:
+the pragma, tree-shaking removes it and `ExtendScreenPlugin.kt` cannot start it:
 
 ```dart
 @pragma('vm:entry-point')
@@ -446,9 +446,9 @@ flutter run -d <device-id>
 
 | # | Optimization | Location |
 |---|---|---|
-| 1 | `FlutterEngine` lazy init — only when secondary display detected | `DualscreenPlugin.initSecondDisplay()` |
-| 2 | `if (subEngine != null) return` guard — prevents double-init | `DualscreenPlugin.initSecondDisplay()` |
-| 3 | `FlutterEngineCache` — engine reusable across config changes | `DualscreenPlugin` (`"dualscreen_sub_engine"`) |
+| 1 | `FlutterEngine` lazy init — only when secondary display detected | `ExtendScreenPlugin.initSecondDisplay()` |
+| 2 | `if (subEngine != null) return` guard — prevents double-init | `ExtendScreenPlugin.initSecondDisplay()` |
+| 3 | `FlutterEngineCache` — engine reusable across config changes | `ExtendScreenPlugin` (`"extend_screen_sub_engine"`) |
 | 4 | `_cachedSupported` — `isSupported()` queries platform only once | `AndroidSecondDisplayManager` |
 | 5 | 100ms `Timer` debounce on `sendStateToSubDisplay` | Example `main_window.dart._syncSubDisplay()` |
 | 6 | `ValueNotifier` + `ValueListenableBuilder` — scoped rebuilds | Example `main_window.dart`, `sub_window.dart` |
@@ -494,25 +494,25 @@ flutter run -d <device-id>
 
 ## File Checklist
 
-### Package (`dualscreen/`)
+### Package (`extend_screen/`)
 
 | File | Status |
 |---|---|
 | `pubspec.yaml` | plugin manifest, `desktop_multi_window: ^0.2.0` |
-| `lib/dualscreen.dart` | barrel export |
+| `lib/extend_screen.dart` | barrel export |
 | `lib/src/sub_display_state.dart` | sealed state + JSON codec |
 | `lib/src/sub_window_size.dart` | sealed window-size spec + `resolveFrame()` |
 | `lib/src/multi_window_manager.dart` | abstract API + singleton factory |
 | `lib/src/desktop_multi_window_manager.dart` | desktop impl (hot restart fix + `SubWindowSize`) |
 | `lib/src/android_second_display_manager.dart` | Android MethodChannel impl |
 | `lib/src/unsupported_multi_window_manager.dart` | iOS / Web no-op |
-| `android/.../DualscreenPlugin.kt` | `FlutterPlugin` + `SecondDisplayManager` + `SecondDisplayPresentation` |
+| `android/.../ExtendScreenPlugin.kt` | `FlutterPlugin` + `SecondDisplayManager` + `SecondDisplayPresentation` |
 
-### Example app (`dualscreen/example/`)
+### Example app (`extend_screen/example/`)
 
 | File | Status |
 |---|---|
-| `pubspec.yaml` | `dualscreen: path: ../` |
+| `pubspec.yaml` | `extend_screen: path: ../` |
 | `lib/main.dart` | entry-point router |
 | `lib/main_window.dart` | desktop + Android POS UI |
 | `lib/sub_window.dart` | desktop sub-window |

@@ -1,4 +1,4 @@
-# dualscreen
+# extend_screen
 
 A Flutter plugin for **multi-window support on desktop** and **dual-display support on Android**.
 
@@ -16,8 +16,8 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dualscreen:
-    path: ../dualscreen   # or pub.dev package name once published
+  extend_screen:
+    path: ../extend_screen   # or pub.dev package name once published
 ```
 
 Then run:
@@ -31,7 +31,7 @@ flutter pub get
 ## Quick Start
 
 ```dart
-import 'package:dualscreen/dualscreen.dart';
+import 'package:extend_screen/extend_screen.dart';
 
 // Obtain the singleton — platform is detected once and cached
 final manager = await MultiWindowManager.instance();
@@ -379,7 +379,7 @@ The example demonstrates:
 
 ```
 lib/
-├── dualscreen.dart                         ← public barrel export
+├── extend_screen.dart                         ← public barrel export
 └── src/
     ├── multi_window_manager.dart           ← abstract API + singleton factory
     ├── sub_display_state.dart              ← sealed state (Idle / OrderSummary / PaymentPrompt)
@@ -388,8 +388,8 @@ lib/
     ├── android_second_display_manager.dart ← Android MethodChannel implementation
     └── unsupported_multi_window_manager.dart ← iOS / Web no-op fallback
 
-android/src/main/kotlin/app/mylekha/package/dualscreen/
-└── DualscreenPlugin.kt                     ← FlutterPlugin, Presentation API, second FlutterEngine
+android/src/main/kotlin/app/mylekha/package/extend_screen/
+└── ExtendScreenPlugin.kt                     ← FlutterPlugin, Presentation API, second FlutterEngine
 
 example/                                    ← runnable demo app
 ```

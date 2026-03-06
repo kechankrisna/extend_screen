@@ -4,7 +4,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-import 'package:dualscreen/dualscreen.dart';
+import 'package:extend_screen/extend_screen.dart';
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
@@ -12,7 +12,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Dualscreen Example',
+      title: 'Extendscreen Example',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -157,7 +157,7 @@ class _MainWindowPageState extends State<MainWindowPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Dualscreen Example — Main Window'),
+        title: const Text('Extendscreen Example — Main Window'),
         actions: [
           TextButton.icon(
             onPressed: () => _manager?.closeAll(),

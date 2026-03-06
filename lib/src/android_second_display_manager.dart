@@ -6,7 +6,7 @@ import 'sub_window_size.dart';
 
 /// Android implementation.
 ///
-/// Communicates with [DualscreenPlugin] (Kotlin) via
+/// Communicates with [ExtendscreenPlugin] (Kotlin) via
 /// `MethodChannel("second_display")`. The plugin manages the Android
 /// `Presentation` API and the secondary `FlutterEngine`.
 class AndroidSecondDisplayManager extends MultiWindowManager {

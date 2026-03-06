@@ -1,10 +1,10 @@
-/// `dualscreen` — Flutter plugin for multi-window (desktop) and
+/// `extend_screen` — Flutter plugin for multi-window (desktop) and
 /// dual-display / secondary-screen (Android POS) support.
 ///
 /// ## Usage
 ///
 /// ```dart
-/// import 'package:dualscreen/dualscreen.dart';
+/// import 'package:extend_screen/extend_screen.dart';
 ///
 /// final manager = await MultiWindowManager.instance();
 ///
@@ -29,7 +29,7 @@
 ///   runApp(const MySubScreenApp());
 /// }
 /// ```
-library dualscreen;
+library extend_screen;
 
 export 'src/multi_window_manager.dart';
 export 'src/sub_display_state.dart';

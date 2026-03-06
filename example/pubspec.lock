@@ -57,7 +57,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1"
-  dualscreen:
+  extend_screen:
     dependency: "direct main"
     description:
       path: ".."
