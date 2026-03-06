@@ -37,6 +37,7 @@ class _MainWindowPageState extends State<MainWindowPage> {
 
   // ── Desktop state ──────────────────────────────────────────────────────────
   final ValueNotifier<int> _counter = ValueNotifier(0);
+  final TextEditingController _messageController = TextEditingController();
 
   // ── Android POS state ──────────────────────────────────────────────────────
   final ValueNotifier<List<Map<String, dynamic>>> _items = ValueNotifier([]);
@@ -73,10 +74,20 @@ class _MainWindowPageState extends State<MainWindowPage> {
   @override
   void dispose() {
     _counter.dispose();
+    _messageController.dispose();
     _items.dispose();
     _total.dispose();
     _debounce?.cancel();
     super.dispose();
+  }
+
+  // ── Desktop helpers ────────────────────────────────────────────────────────
+
+  void _sendMessageToSubWindows() {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+    _manager?.sendStateToSecondaryDisplay({'type': 'message', 'text': text});
+    _messageController.clear();
   }
 
   // ── Android helpers ────────────────────────────────────────────────────────
@@ -84,12 +95,11 @@ class _MainWindowPageState extends State<MainWindowPage> {
   void _syncSubDisplay() {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 100), () {
-      _manager?.sendStateToSubDisplay(
-        OrderSummaryState(
-          items: List<Map<String, dynamic>>.from(_items.value),
-          total: _total.value,
-        ),
-      );
+      _manager?.sendStateToSecondaryDisplay({
+        'type': 'order_summary',
+        'items': List<Map<String, dynamic>>.from(_items.value),
+        'total': _total.value,
+      });
     });
   }
 
@@ -124,7 +134,10 @@ class _MainWindowPageState extends State<MainWindowPage> {
   }
 
   void _sendPayment() {
-    _manager?.sendStateToSubDisplay(PaymentPromptState(total: _total.value));
+    _manager?.sendStateToSecondaryDisplay({
+      'type': 'payment_prompt',
+      'total': _total.value,
+    });
   }
 
   void _newOrder() {
@@ -132,7 +145,7 @@ class _MainWindowPageState extends State<MainWindowPage> {
     _items.value = [];
     _total.value = 0.0;
     _productIndex = 0;
-    _manager?.sendStateToSubDisplay(const IdleState());
+    _manager?.sendStateToSecondaryDisplay(const {'type': 'idle'});
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -197,6 +210,29 @@ class _MainWindowPageState extends State<MainWindowPage> {
               ),
               icon: const Icon(Icons.open_in_new),
               label: const Text('Open Sub Window (640 × 480 centred)'),
+            ),
+            const SizedBox(height: 32),
+            const Divider(indent: 60, endIndent: 60),
+            const SizedBox(height: 16),
+            const Text('Send a message to all sub-windows:'),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: 320,
+              child: TextField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Type a message…',
+                  isDense: true,
+                ),
+                onSubmitted: (_) => _sendMessageToSubWindows(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: _sendMessageToSubWindows,
+              icon: const Icon(Icons.send),
+              label: const Text('Send to Sub Windows'),
             ),
           ],
         ),

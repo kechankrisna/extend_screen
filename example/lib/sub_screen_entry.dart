@@ -1,5 +1,7 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:extend_screen/extend_screen.dart';
 
@@ -25,22 +27,24 @@ class SubScreenApp extends StatefulWidget {
 }
 
 class _SubScreenAppState extends State<SubScreenApp> {
-  static const _channel = MethodChannel('sub_screen_commands');
-
-  SubDisplayState _state = const IdleState();
+  Map<String, dynamic> _state = const {'type': 'idle'};
+  StreamSubscription<Map<String, dynamic>>? _subscription;
 
   @override
   void initState() {
     super.initState();
-    _channel.setMethodCallHandler((call) async {
-      if (call.method == 'updateState') {
-        setState(() {
-          _state = SubDisplayState.fromJson(
-            Map<String, dynamic>.from(call.arguments as Map),
-          );
-        });
-      }
+    MultiWindowManager.instance().then((manager) {
+      _subscription = manager.receiveStateFromMainDisplay().listen((state) {
+        log('Received state from main display: ${state.toString()}');
+        if (mounted) setState(() => _state = state);
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -51,11 +55,15 @@ class _SubScreenAppState extends State<SubScreenApp> {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: switch (_state) {
-        IdleState() => const IdleScreen(),
-        OrderSummaryState s =>
-          OrderSummaryScreen(items: s.items, total: s.total),
-        PaymentPromptState s => PaymentPromptScreen(total: s.total),
+      home: switch (_state['type'] as String? ?? 'idle') {
+        'order_summary' => OrderSummaryScreen(
+            items: List<Map<String, dynamic>>.from(_state['items'] as List),
+            total: (_state['total'] as num).toDouble(),
+          ),
+        'payment_prompt' => PaymentPromptScreen(
+            total: (_state['total'] as num).toDouble(),
+          ),
+        _ => const IdleScreen(),
       },
     );
   }

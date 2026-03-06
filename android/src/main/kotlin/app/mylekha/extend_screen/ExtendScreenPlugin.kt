@@ -31,7 +31,8 @@ class ExtendScreenPlugin : FlutterPlugin {
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         manager = SecondDisplayManager(binding.applicationContext)
         manager!!.register(
-            MethodChannel(binding.binaryMessenger, "second_display")
+            MethodChannel(binding.binaryMessenger, "second_display"),
+            binding.binaryMessenger,
         )
     }
 
@@ -77,7 +78,11 @@ private class SecondDisplayManager(
     private var presentation: SecondDisplayPresentation? = null
     private var subChannel: MethodChannel? = null
 
-    fun register(mainChannel: MethodChannel) {
+    // Retained so the reverse channel (secondary → main) can reach the main engine.
+    private var mainMessenger: io.flutter.plugin.common.BinaryMessenger? = null
+
+    fun register(mainChannel: MethodChannel, messenger: io.flutter.plugin.common.BinaryMessenger) {
+        mainMessenger = messenger
         mainChannel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "isSecondDisplayAvailable" ->
@@ -104,6 +109,7 @@ private class SecondDisplayManager(
 
     fun dispose() {
         displayManager.unregisterDisplayListener(this)
+        mainMessenger = null
         releaseEngine()
     }
 
@@ -195,6 +201,24 @@ private class SecondDisplayManager(
                 )
                 FlutterEngineCache.getInstance().put(ENGINE_ID, engine)
                 subChannel = MethodChannel(engine.dartExecutor.binaryMessenger, SUB_CHANNEL)
+
+                // Reverse channel: secondary display → main app.
+                // The sub engine calls invokeMethod("sendState") on this channel;
+                // we forward it as "updateState" to the main engine.
+                val reverseSubChannel = MethodChannel(
+                    engine.dartExecutor.binaryMessenger, "secondary_to_main"
+                )
+                reverseSubChannel.setMethodCallHandler { call, result ->
+                    if (call.method == "sendState") {
+                        mainMessenger?.let { messenger ->
+                            MethodChannel(messenger, "secondary_to_main")
+                                .invokeMethod("updateState", call.arguments)
+                        }
+                        result.success(null)
+                    } else {
+                        result.notImplemented()
+                    }
+                }
             }
 
             presentation = SecondDisplayPresentation(context, display, subEngine!!)

@@ -1,5 +1,4 @@
 import 'multi_window_manager.dart';
-import 'sub_display_state.dart';
 import 'sub_window_size.dart';
 
 /// Fallback implementation for platforms that do not support multi-window
@@ -18,7 +17,16 @@ class UnsupportedMultiWindowManager extends MultiWindowManager {
   }) async {}
 
   @override
-  Future<void> sendStateToSubDisplay(SubDisplayState state) async {}
+  Future<void> sendStateToSecondaryDisplay(Map<String, dynamic> state) async {}
+
+  @override
+  Future<void> sendStateToMainDisplay(Map<String, dynamic> state) async {}
+
+  @override
+  Stream<Map<String, dynamic>> receiveStateFromMainDisplay() => const Stream.empty();
+
+  @override
+  Stream<Map<String, dynamic>> receiveStateFromSecondaryDisplay() => const Stream.empty();
 
   @override
   Future<void> closeAll() async {}

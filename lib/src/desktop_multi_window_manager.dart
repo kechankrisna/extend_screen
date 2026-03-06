@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 
 import 'multi_window_manager.dart';
-import 'sub_display_state.dart';
 import 'sub_window_size.dart';
 
 /// Desktop implementation (Windows, macOS, Linux).
@@ -32,6 +32,10 @@ class DesktopMultiWindowManager extends MultiWindowManager {
 
   int _windowCount = 0;
   final List<WindowController> _controllers = [];
+
+  // Lazy broadcast stream — used inside the sub-window process to receive
+  // state sent by the main window via [sendStateToSecondaryDisplay].
+  StreamController<Map<String, dynamic>>? _fromMainController;
 
   /// Closes every sub-window that the OS still reports as alive.
   /// Called automatically by [create] in debug mode.
@@ -68,9 +72,50 @@ class DesktopMultiWindowManager extends MultiWindowManager {
     _controllers.add(controller);
   }
 
-  /// No-op on desktop — state sync to a secondary display is Android-only.
+  /// Broadcasts [state] to every open sub-window via [DesktopMultiWindow.invokeMethod].
+  /// Automatically removes controllers whose sub-window has been closed by the user.
   @override
-  Future<void> sendStateToSubDisplay(SubDisplayState state) async {}
+  Future<void> sendStateToSecondaryDisplay(Map<String, dynamic> state) async {
+    for (final c in List.of(_controllers)) {
+      try {
+        await DesktopMultiWindow.invokeMethod(c.windowId, 'updateState', state);
+      } catch (_) {
+        // Sub-window was closed by the user — prune the dead controller.
+        _controllers.remove(c);
+      }
+    }
+  }
+
+  @override
+  Future<void> sendStateToMainDisplay(Map<String, dynamic> state) async {}
+
+  /// Returns a broadcast stream of state maps sent by the main window.
+  ///
+  /// Call this inside the **sub-window process**. Lazily registers a
+  /// [DesktopMultiWindow.setMethodCallHandler] that forwards every
+  /// `'updateState'` call from the main window into the stream.
+  @override
+  Stream<Map<String, dynamic>> receiveStateFromMainDisplay() {
+    if (_fromMainController == null) {
+      _fromMainController =
+          StreamController<Map<String, dynamic>>.broadcast();
+      DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
+        if (call.method == 'updateState' && call.arguments != null) {
+          _fromMainController?.add(
+            Map<String, dynamic>.from(
+              (call.arguments as Map<Object?, Object?>).cast<String, dynamic>(),
+            ),
+          );
+        }
+        return null;
+      });
+    }
+    return _fromMainController!.stream;
+  }
+
+  @override
+  Stream<Map<String, dynamic>> receiveStateFromSecondaryDisplay() =>
+      const Stream.empty();
 
   @override
   Future<void> closeAll() async {
@@ -78,5 +123,7 @@ class DesktopMultiWindowManager extends MultiWindowManager {
       await c.close();
     }
     _controllers.clear();
+    await _fromMainController?.close();
+    _fromMainController = null;
   }
 }

@@ -13,9 +13,16 @@
 ///   await manager.openSubWindow({'title': 'My Sub Window'});
 ///
 ///   // Android POS: push a state to the customer-facing display
-///   await manager.sendStateToSubDisplay(
-///     OrderSummaryState(items: cart, total: 49.99),
-///   );
+///   await manager.sendStateToSecondaryDisplay({
+///     'type': 'order_summary',
+///     'items': cart,
+///     'total': 49.99,
+///   });
+///
+///   // Android POS: listen for state sent back from the secondary display
+///   manager.receiveStateFromSecondaryDisplay().listen((state) {
+///     // handle state map
+///   });
 /// }
 /// ```
 ///
@@ -32,5 +39,4 @@
 library extend_screen;
 
 export 'src/multi_window_manager.dart';
-export 'src/sub_display_state.dart';
 export 'src/sub_window_size.dart';

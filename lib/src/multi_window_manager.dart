@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
-import 'sub_display_state.dart';
 import 'sub_window_size.dart';
 import 'desktop_multi_window_manager.dart';
 import 'android_second_display_manager.dart';
@@ -59,12 +58,38 @@ abstract class MultiWindowManager {
     SubWindowSize size = const SubWindowSize.fullScreen(),
   });
 
-  /// Sends a [SubDisplayState] snapshot to the secondary display (Android only).
+  /// Sends a state snapshot to the secondary display (Android only).
   ///
-  /// The Kotlin bridge forwards the JSON-encoded state to the sub-screen
-  /// Flutter engine via `MethodChannel("sub_screen_commands")`.
+  /// [state] is a free-form map — include a `'type'` key so the secondary
+  /// display can route to the correct screen. The map is forwarded as-is
+  /// to the Kotlin bridge via `MethodChannel("sendState")`.
   /// Implementors on unsupported platforms silently ignore this call.
-  Future<void> sendStateToSubDisplay(SubDisplayState state);
+  Future<void> sendStateToSecondaryDisplay(Map<String, dynamic> state);
+
+  /// Sends a state snapshot from the secondary display back to the main app
+  /// (Android only). Call this from within the secondary display's engine.
+  ///
+  /// The Kotlin bridge forwards the map to the main engine via
+  /// `MethodChannel("secondary_to_main")`.
+  /// Implementors on unsupported platforms silently ignore this call.
+  Future<void> sendStateToMainDisplay(Map<String, dynamic> state);
+
+  /// Broadcast stream of state maps pushed from the main app.
+  ///
+  /// Call this from within the secondary display's Flutter engine (i.e. in the
+  /// `subScreenMain` entry point). Each event is the raw map sent by the main
+  /// app via [sendStateToSecondaryDisplay].
+  ///
+  /// On unsupported platforms the stream completes immediately with no events.
+  Stream<Map<String, dynamic>> receiveStateFromMainDisplay();
+
+  /// Broadcast stream of state maps pushed from the secondary display.
+  ///
+  /// Call this from within the main app. Each event is the raw map sent by the
+  /// secondary display via [sendStateToMainDisplay].
+  ///
+  /// On unsupported platforms the stream completes immediately with no events.
+  Stream<Map<String, dynamic>> receiveStateFromSecondaryDisplay();
 
   /// Closes all open sub-windows (desktop) or releases the secondary display
   /// Flutter engine (Android).
