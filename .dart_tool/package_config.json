@@ -167,7 +167,7 @@
       "name": "dualscreen",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.10"
+      "languageVersion": "3.9"
     }
   ],
   "generator": "pub",

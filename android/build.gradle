@@ -1,11 +1,11 @@
-group 'com.example.dualscreen'
+group 'app.mylekha.package.dualscreen'
 version '1.0'
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace 'com.example.dualscreen'
+    namespace 'app.mylekha.package.dualscreen'
     compileSdk 34
 
     compileOptions {

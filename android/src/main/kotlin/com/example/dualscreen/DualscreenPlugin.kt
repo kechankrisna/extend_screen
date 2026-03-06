@@ -1,4 +1,4 @@
-package com.example.dualscreen
+package app.mylekha.package.dualscreen
 
 import android.app.Presentation
 import android.content.Context

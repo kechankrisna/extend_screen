@@ -8,7 +8,7 @@
 PRODUCT_NAME = dualscreen_example
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.dualscreenExample
+PRODUCT_BUNDLE_IDENTIFIER = app.mylekha.package.dualscreenExample
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.

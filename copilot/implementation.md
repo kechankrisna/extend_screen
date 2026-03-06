@@ -12,7 +12,7 @@ and **dual-display / secondary-screen support on Android** (POS devices).
 | Flutter SDK | `^3.10.4` |
 | Dart | `^3.10.4` (sealed classes, patterns) |
 | `desktop_multi_window` | `^0.2.0` |
-| Android plugin package | `com.example.dualscreen` |
+| Android plugin package | `app.mylekha.package.dualscreen` |
 | Android Kotlin JVM target | 17 |
 | Plugin registration | `FlutterPlugin` interface (auto via `GeneratedPluginRegistrant`) |
 
