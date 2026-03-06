@@ -4,11 +4,14 @@ import android.app.Presentation
 import android.content.Context
 import android.hardware.display.DisplayManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Display
 import io.flutter.FlutterInjector
 import io.flutter.embedding.android.FlutterView
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
+import io.flutter.embedding.engine.FlutterJNI
 import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodChannel
@@ -94,7 +97,7 @@ private class SecondDisplayManager(
             }
         }
 
-        displayManager.registerDisplayListener(this, null)
+        displayManager.registerDisplayListener(this, Handler(Looper.getMainLooper()))
         // Initialise immediately if a secondary display is already connected.
         getSecondDisplay()?.let { initSecondDisplay(it) }
     }
@@ -107,11 +110,35 @@ private class SecondDisplayManager(
     // ── DisplayManager.DisplayListener ────────────────────────────────────────
 
     override fun onDisplayAdded(displayId: Int) {
-        displayManager.getDisplay(displayId)?.let { initSecondDisplay(it) }
+        if (displayId == Display.DEFAULT_DISPLAY) return
+        val display = displayManager.getDisplay(displayId) ?: return
+        if (!isWiredExternalDisplay(display)) return
+
+        if (subEngine == null) {
+            // First time — create the engine and show the presentation.
+            initSecondDisplay(display)
+        } else {
+            // Engine already running (rapid reconnect) — just re-show the presentation.
+            presentation?.detach()
+            presentation?.dismiss()
+            presentation = null
+            try {
+                presentation = SecondDisplayPresentation(context, display, subEngine!!)
+                    .also { it.show() }
+            } catch (e: Exception) {
+                // Display rejected Presentation window — ignore.
+            }
+        }
     }
 
     override fun onDisplayRemoved(displayId: Int) {
-        releaseEngine()
+        // Dismiss the Presentation window but keep the FlutterEngine alive.
+        // Destroying and recreating the engine on every display reconnect event
+        // exhausts Adreno GPU draw-context slots (errno 28) and crashes Flutter.
+        presentation?.detach()
+        presentation?.dismiss()
+        presentation = null
+        // Engine (subEngine) intentionally kept alive for rapid reconnect.
     }
 
     override fun onDisplayChanged(displayId: Int) {
@@ -121,26 +148,62 @@ private class SecondDisplayManager(
     // ── Internal ──────────────────────────────────────────────────────────────
 
     private fun getSecondDisplay(): Display? =
-        displayManager
-            .getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
-            .firstOrNull()
+        displayManager.getDisplays().firstOrNull { isWiredExternalDisplay(it) }
+
+    /**
+     * Returns true for physical wired external displays only.
+     *
+     * Acceptance criteria (all public API):
+     *  - Not the built-in display (DEFAULT_DISPLAY)
+     *  - Active (not STATE_OFF)
+     *  - Not a private system overlay (FLAG_PRIVATE)
+     *  - Supports Presentation windows (FLAG_PRESENTATION) — set on HDMI, USB-C, Samsung DeX,
+     *    and POS dual-screen devices (Sunmi, PAX)
+     *
+     * Exclusion:
+     *  - Miracast / WiFi displays: Android always names them "Wireless Display" (all locales).
+     *    FLAG_PRESENTATION is also set on these so a name check is the only public-API way
+     *    to distinguish them from wired displays.
+     */
+    private fun isWiredExternalDisplay(display: Display): Boolean {
+        if (display.displayId == Display.DEFAULT_DISPLAY) return false
+        if (display.state == Display.STATE_OFF) return false
+        if (display.flags and Display.FLAG_PRIVATE != 0) return false
+        if (display.flags and Display.FLAG_PRESENTATION == 0) return false
+        // Exclude Miracast / WiFi Displays — Android names them consistently.
+        val name = display.name.lowercase()
+        if (name.contains("wireless") || name.contains("wifi") || name.contains("miracast")) {
+            return false
+        }
+        return true
+    }
 
     private fun initSecondDisplay(display: Display) {
         if (subEngine != null) return // Guard: never recreate while already running.
 
-        subEngine = FlutterEngine(context).also { engine ->
-            engine.dartExecutor.executeDartEntrypoint(
-                DartExecutor.DartEntrypoint(
-                    FlutterInjector.instance().flutterLoader().findAppBundlePath(),
-                    "subScreenMain" // @pragma('vm:entry-point') in sub_screen_entry.dart
+        try {
+            // automaticallyRegisterPlugins = false prevents GeneratedPluginRegistrant
+            // from registering ExtendScreenPlugin on this sub-engine, which would cause
+            // infinite recursion (sub-engine → plugin registered → detects display →
+            // creates another sub-engine → ...) exhausting Adreno GPU context slots.
+            subEngine = FlutterEngine(context, null, FlutterJNI(), null, false).also { engine ->
+                engine.dartExecutor.executeDartEntrypoint(
+                    DartExecutor.DartEntrypoint(
+                        FlutterInjector.instance().flutterLoader().findAppBundlePath(),
+                        "subScreenMain" // @pragma('vm:entry-point') in sub_screen_entry.dart
+                    )
                 )
-            )
-            FlutterEngineCache.getInstance().put(ENGINE_ID, engine)
-            subChannel = MethodChannel(engine.dartExecutor.binaryMessenger, SUB_CHANNEL)
-        }
+                FlutterEngineCache.getInstance().put(ENGINE_ID, engine)
+                subChannel = MethodChannel(engine.dartExecutor.binaryMessenger, SUB_CHANNEL)
+            }
 
-        presentation = SecondDisplayPresentation(context, display, subEngine!!)
-            .also { it.show() }
+            presentation = SecondDisplayPresentation(context, display, subEngine!!)
+                .also { it.show() }
+        } catch (e: Exception) {
+            // Display does not support Presentation (e.g. Samsung virtual UI layer).
+            // Clean up any partially initialised state and silently ignore.
+            releaseEngine()
+        }
     }
 
     private fun releaseEngine() {
