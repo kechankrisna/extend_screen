@@ -32,7 +32,7 @@ dualscreen/
 │       ├── android_second_display_manager.dart ← Android MethodChannel impl
 │       └── unsupported_multi_window_manager.dart ← iOS / Web no-op fallback
 ├── android/
-│   └── src/main/kotlin/com/example/dualscreen/
+│   └── src/main/kotlin/app/mylekha/package/dualscreen/
 │       └── DualscreenPlugin.kt                 ← FlutterPlugin + Presentation API
 ├── example/                                    ← runnable demo app
 │   ├── lib/

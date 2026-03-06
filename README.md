@@ -388,7 +388,7 @@ lib/
     ├── android_second_display_manager.dart ← Android MethodChannel implementation
     └── unsupported_multi_window_manager.dart ← iOS / Web no-op fallback
 
-android/src/main/kotlin/com/example/dualscreen/
+android/src/main/kotlin/app/mylekha/package/dualscreen/
 └── DualscreenPlugin.kt                     ← FlutterPlugin, Presentation API, second FlutterEngine
 
 example/                                    ← runnable demo app

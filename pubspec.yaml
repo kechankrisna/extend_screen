@@ -2,12 +2,12 @@ name: dualscreen
 description: A Flutter plugin for multi-window support on desktop (Windows, macOS, Linux)
   and dual-display / secondary-screen support on Android (POS devices).
 version: 0.1.0
-repository: https://github.com/kechankrisna/liquiddart
+repository: https://github.com/kechankrisna/dualscreen
 license: MIT
 
 environment:
   sdk: ">=3.9.2 <4.0.0"
-  # flutter: '>=3.10.0'
+  # flutter: '>=3.0.0'
 
 dependencies:
   flutter:
