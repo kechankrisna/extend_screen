@@ -1,7 +1,7 @@
 name: extend_screen
 description: A Flutter plugin for multi-window support on desktop (Windows, macOS, Linux)
   and dual-display / secondary-screen support on Android (POS devices).
-version: 0.1.0+1
+version: 0.1.0+2
 repository: https://github.com/kechankrisna/extend_screen
 license: MIT
 
